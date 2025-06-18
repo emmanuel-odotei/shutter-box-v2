@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: image-app
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+server:
+  port: 8082
+
+aws:
+  region: "us-east-1"
+  s3:
+    bucket: ${BUCKET_NAME:image-app-bucket}
