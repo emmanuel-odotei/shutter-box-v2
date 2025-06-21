@@ -9,6 +9,6 @@ server:
   port: 8082
 
 aws:
-  region: "us-east-1"
+  region: ${AWS_REGION:eu-west-1}  # fallback to eu-west-1 if not set
   s3:
     bucket: ${BUCKET_NAME:image-app-bucket}
