@@ -1,19 +1,15 @@
-name: Build and Deploy Image to ECS via CodeDeploy
+name: Deploy to ECS using CodeDeploy
 
 on:
   push:
     branches: [main]
 
 env:
-  IMAGE_TAG: ${{ secrets.IMAGE_TAG }}
-  ECR_URI: ${{ secrets.ECR_URI }}
-  AWS_REGION: ${{ secrets.AWS_REGION }}
-  INFRA_S3_BUCKET: ${{ secrets.INFRA_S3_BUCKET }}
-  CODEDEPLOY_APP: image-app
-  CODEDEPLOY_GROUP: image-app-deploy-group
+  AWS_REGION: eu-west-1
+  INFRA_S3_BUCKET: shutterbox-cf-templates
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,7 +22,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build the app (JAR)
+      - name: Build JAR
         run: ./mvnw clean package -DskipTests
 
       - name: Configure AWS credentials
@@ -39,24 +35,31 @@ jobs:
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and Push Docker image
+      - name: Build and push Docker image
         run: |
-          docker build -t $ECR_URI:$IMAGE_TAG .
-          docker push $ECR_URI:$IMAGE_TAG
+          docker build -t ${{ secrets.ECR_URI }}:${{ secrets.IMAGE_TAG }} .
+          docker push ${{ secrets.ECR_URI }}:${{ secrets.IMAGE_TAG }}
 
-      - name: Create imagedefinitions.json
+      - name: Replace image URI in imagedefinitions.json
         run: |
-          echo '[{"name":"image-app","imageUri":"'"$ECR_URI:$IMAGE_TAG"'"}]' > imagedefinitions.json
+          echo '[{"name":"image-app","imageUri":"${{ secrets.ECR_URI }}:${{ secrets.IMAGE_TAG }}"}]' > imagedefinitions.json
 
-      - name: Upload appspec.json and imagedefinitions.json to S3
+      - name: Register new ECS task definition
         run: |
-          aws s3 cp appspec.json s3://$INFRA_S3_BUCKET/deployments/appspec.json
-          aws s3 cp imagedefinitions.json s3://$INFRA_S3_BUCKET/deployments/imagedefinitions.json
+          sed "s|<IMAGE_URI>|${{ secrets.ECR_URI }}:${{ secrets.IMAGE_TAG }}|g" taskdef.json > taskdef-rendered.json
+          aws ecs register-task-definition --cli-input-json file://taskdef-rendered.json > taskdef-out.json
+          TASK_DEF_ARN=$(jq -r '.taskDefinition.taskDefinitionArn' taskdef-out.json)
+          sed "s|<TASK_DEFINITION_ARN>|$TASK_DEF_ARN|g" appspec.json > appspec-rendered.json
 
-      - name: Trigger deployment via CodeDeploy
+      - name: Upload artifacts to S3
+        run: |
+          aws s3 cp appspec-rendered.json s3://${{ env.INFRA_S3_BUCKET }}/deployments/appspec.json
+          aws s3 cp imagedefinitions.json s3://${{ env.INFRA_S3_BUCKET }}/deployments/imagedefinitions.json
+
+      - name: Trigger deployment
         run: |
           aws deploy create-deployment \
-            --application-name $CODEDEPLOY_APP \
-            --deployment-group-name $CODEDEPLOY_GROUP \
-            --s3-location bucket=$INFRA_S3_BUCKET,key=deployments/imagedefinitions.json,bundleType=json \
-            --deployment-config-name CodeDeployDefault.ECSAllAtOnce
+            --application-name image-app \
+            --deployment-group-name image-app-deploy-group \
+            --s3-location bucket=${{ env.INFRA_S3_BUCKET }},bundleType=json,key=deployments/appspec.json \
+            --file-exists-behavior OVERWRITE
