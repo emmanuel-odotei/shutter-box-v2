@@ -226,15 +226,16 @@ background-size: cover; background-position: center; background-repeat: no-repea
 
     <div class="gallery">
         <div class="thumbnail" th:each="img : ${images}">
-            <img th:src="${img}" th:alt="${img}" data-bs-toggle="modal" data-bs-target="#imageModal"
-                 th:attr="data-img=${img}"/>
+            <img th:src="${img.url}" th:alt="${img.fileName}" data-bs-toggle="modal" data-bs-target="#imageModal"
+                 th:attr="data-img=${img.url}"/>
             <form th:action="@{/delete}" method="post">
-                <input type="hidden" name="key" th:value="${#strings.substringAfter(img, '.com/')}"/>
+                <input type="hidden" name="key" th:value="${#strings.substringAfter(img.url, '.com/')}"/>
                 <button type="submit" class="delete-btn">X</button>
             </form>
         </div>
-        <div class="image-name" th:each="img : ${images}" th:text="${#strings.substringAfterLast(img, '/')}"></div>
     </div>
+
+    <div class="image-name" th:each="img : ${images}" th:text="${img.fileName != null ? img.fileName : 'Unnamed'}"></div>
 
     <div class="pagination">
         <a th:if="${currentPage > 1}" th:href="@{/?page=${currentPage - 1}&size=10}">⬅ Previous</a>
@@ -271,17 +272,45 @@ background-size: cover; background-position: center; background-repeat: no-repea
     const progressContainer = document.querySelector('.progress-container');
 
     dropZone.addEventListener('click', () => fileInput.click());
+
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropZone.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
     });
+
     dropZone.addEventListener('dragleave', () => {
         dropZone.style.backgroundColor = 'transparent';
     });
+
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         fileInput.files = e.dataTransfer.files;
+        previewImage();
     });
+
+    fileInput.addEventListener('change', previewImage);
+
+    function previewImage() {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const result = e.target?.result;
+
+            if (typeof result === 'string') {
+                const preview = document.createElement('div');
+                preview.className = 'thumbnail';
+
+                const img = document.createElement('img');
+                img.src = result;
+
+                preview.appendChild(img);
+                document.querySelector('.gallery').prepend(preview);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
 
     form.addEventListener('submit', function (e) {
         e.preventDefault();

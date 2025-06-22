@@ -1,5 +1,6 @@
 package com.aws.imageapp.service;
 
+import com.aws.imageapp.dto.ImageData;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,6 +20,9 @@ public class S3Service {
     
     @Value( "${aws.s3.bucket}" )
     private String bucketName;
+    
+    @Value( "${aws.region}" )
+    private String regionName;
     
     /**
      * Uploads a file to the specified S3 bucket with public read access.
@@ -36,62 +41,97 @@ public class S3Service {
     }
     
     /**
-     * Returns a list of publicly accessible URLs for the images in the specified S3 bucket,
-     * filtered by the search term if provided, and limited to the specified page and size.
+     * Lists image URLs from the specified S3 bucket, filtered by the search term if provided and
+     * limited to the specified page size.
      *
      * @param page the page number to retrieve (1-indexed)
-     * @param size the number of images per page
-     * @param search the search term to filter images by (case-insensitive)
-     * @return a list of publicly accessible URLs for the filtered images
+     * @param size the number of image URLs to retrieve
+     * @param search the search term to filter image URLs by (case-insensitive)
+     * @return a list of ImageData objects containing the image URL and file name
      */
-    public List<String> listImageUrls(int page, int size, String search) {
-        ListObjectsV2Response response = s3Client.listObjectsV2(ListObjectsV2Request.builder()
-                .bucket(bucketName)
-                .build());
+    public List<ImageData> listImageUrls(int page, int size, String search) {
+        List<ImageData> result = new ArrayList<>();
+        String continuationToken = null;
+        int skip = Math.max((page - 1) * size, 0);
         
-        List<S3Object> allObjects = response.contents();
+        do {
+            ListObjectsV2Request.Builder reqBuilder = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .maxKeys(1000);
+            
+            if (continuationToken != null) {
+                reqBuilder.continuationToken(continuationToken);
+            }
+            
+            ListObjectsV2Response response = s3Client.listObjectsV2(reqBuilder.build());
+            List<S3Object> objects = response.contents();
+            
+            List<S3Object> filtered = (search == null || search.isBlank())
+                    ? objects
+                    : objects.stream()
+                    .filter(obj -> obj.key().toLowerCase().contains(search.toLowerCase()))
+                    .toList();
+            
+            for (S3Object obj : filtered) {
+                if (skip-- > 0 || result.size() >= size) {
+                    continue;
+                }
+                
+                String key = obj.key();
+                String url = String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, regionName, key);
+                String fileName = key.contains("/") ? key.substring(key.lastIndexOf("/") + 1) : key;
+                
+                result.add(new ImageData(url, fileName ));
+            }
+            
+            continuationToken = response.nextContinuationToken();
+            
+        } while (result.size() < size && continuationToken != null);
         
-        // Filter by search if provided
-        List<S3Object> filtered = (search == null || search.isBlank())
-                ? allObjects
-                : allObjects.stream()
-                .filter(obj -> obj.key().toLowerCase().contains(search.toLowerCase()))
-                .toList();
-        
-        int from = Math.min((page - 1) * size, filtered.size());
-        int to = Math.min(from + size, filtered.size());
-        
-        return filtered.subList(from, to).stream()
-                .map(obj -> String.format("https://%s.s3.amazonaws.com/%s", bucketName, obj.key()))
-                .toList();
+        return result;
     }
     
     /**
-     * Calculates the total number of pages of images in the S3 bucket, given the specified page size
-     * and search term (if provided).
+     * Calculates the total number of pages required to display all the images in the S3 bucket,
+     * filtered by the search term if provided, and limited to the specified page size.
      *
-     * @param size the page size
+     * @param size   the number of images per page
      * @param search the search term to filter images by (case-insensitive)
-     * @return the total number of pages
+     * @return the total number of pages required to display all the filtered images
      */
-    public int getTotalPages(int size, String search) {
-        ListObjectsV2Response response = s3Client.listObjectsV2(ListObjectsV2Request.builder()
-                .bucket(bucketName)
-                .build());
+    public int getTotalPages (int size, String search) {
+        int total = 0;
+        String continuationToken = null;
         
-        long total = (search == null || search.isBlank())
-                ? response.contents().size()
-                : response.contents().stream()
-                .filter(obj -> obj.key().toLowerCase().contains(search.toLowerCase()))
-                .count();
+        do {
+            ListObjectsV2Request.Builder reqBuilder = ListObjectsV2Request.builder()
+                    .bucket( bucketName )
+                    .maxKeys( 1000 );
+            
+            if ( continuationToken != null ) {
+                reqBuilder.continuationToken( continuationToken );
+            }
+            
+            ListObjectsV2Response response = s3Client.listObjectsV2( reqBuilder.build() );
+            
+            List<S3Object> filtered = ( search == null || search.isBlank() )
+                    ? response.contents()
+                    : response.contents().stream()
+                    .filter( obj -> obj.key().toLowerCase().contains( search.toLowerCase() ) )
+                    .toList();
+            
+            total += filtered.size();
+            continuationToken = response.nextContinuationToken();
+            
+        } while ( continuationToken != null );
         
-        return (int) Math.ceil((double) total / size);
+        return (int) Math.ceil( (double) total / size );
     }
     
-    public void delete(String key) {
-        s3Client.deleteObject(DeleteObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build());
+    public void delete (String key) {
+        s3Client.deleteObject( DeleteObjectRequest.builder()
+                .bucket( bucketName )
+                .key( key )
+                .build() );
     }
 }

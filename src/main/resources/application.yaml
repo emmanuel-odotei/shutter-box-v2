@@ -7,7 +7,6 @@ spring:
       max-request-size: 5MB
 server:
   port: 8082
-
 management:
   endpoints:
     web:
@@ -16,7 +15,6 @@ management:
   endpoint:
     health:
       show-details: always
-
 aws:
   region: ${AWS_REGION:eu-west-1}  # fallback to eu-west-1 if not set
   s3:

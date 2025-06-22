@@ -1,17 +1,20 @@
-name: Build and Push Docker Image to ECR
+name: Build and Deploy Image to ECS via CodeDeploy
 
 on:
   push:
     branches: [main]
 
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
+env:
+  IMAGE_TAG: ${{ secrets.IMAGE_TAG }}
+  ECR_URI: ${{ secrets.ECR_URI }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  INFRA_S3_BUCKET: ${{ secrets.INFRA_S3_BUCKET }}
+  CODEDEPLOY_APP: image-app
+  CODEDEPLOY_GROUP: image-app-deploy-group
 
-    env:
-      IMAGE_TAG: ${{ secrets.IMAGE_TAG }}
-      ECR_URI: ${{ secrets.ECR_URI }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -31,12 +34,29 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Log in to Amazon ECR (Private)
+      - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, tag, and push Docker image
+      - name: Build and Push Docker image
         run: |
           docker build -t $ECR_URI:$IMAGE_TAG .
           docker push $ECR_URI:$IMAGE_TAG
+
+      - name: Create imagedefinitions.json
+        run: |
+          echo '[{"name":"image-app","imageUri":"'"$ECR_URI:$IMAGE_TAG"'"}]' > imagedefinitions.json
+
+      - name: Upload appspec.yml and imagedefinitions.json to S3
+        run: |
+          aws s3 cp appspec.yml s3://$INFRA_S3_BUCKET/deployments/appspec.yml
+          aws s3 cp imagedefinitions.json s3://$INFRA_S3_BUCKET/deployments/imagedefinitions.json
+
+      - name: Trigger deployment via CodeDeploy
+        run: |
+          aws deploy create-deployment \
+            --application-name $CODEDEPLOY_APP \
+            --deployment-group-name $CODEDEPLOY_GROUP \
+            --s3-location bucket=$INFRA_S3_BUCKET,key=deployments/imagedefinitions.json,bundleType=json \
+            --deployment-config-name CodeDeployDefault.ECSAllAtOnce

@@ -1,5 +1,6 @@
 package com.aws.imageapp.controller;
 
+import com.aws.imageapp.dto.ImageData;
 import com.aws.imageapp.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -32,7 +33,7 @@ public class S3Controller {
                        @RequestParam(defaultValue = "10") int size,
                        @RequestParam(required = false) String search,
                        Model model) {
-        List<String> filtered = s3Service.listImageUrls(page, size, search);
+        List<ImageData> filtered = s3Service.listImageUrls(page, size, search);
         model.addAttribute("images", filtered);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", s3Service.getTotalPages(size, search));
