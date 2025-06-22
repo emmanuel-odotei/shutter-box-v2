@@ -59,7 +59,7 @@ jobs:
       - name: Trigger deployment
         run: |
           aws deploy create-deployment \
-            --application-name image-app-codedeploy \
+            --application-name image-app \
             --deployment-group-name image-app-deploy-group \
             --s3-location bucket=${{ env.INFRA_S3_BUCKET }},bundleType=json,key=deployments/appspec.json \
             --deployment-config-name CodeDeployDefault.ECSAllAtOnce
