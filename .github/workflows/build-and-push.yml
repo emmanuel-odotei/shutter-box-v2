@@ -6,7 +6,7 @@ on:
 
 env:
   AWS_REGION: eu-west-1
-  INFRA_S3_BUCKET: shutterbox-cf-templates
+  INFRA_S3_BUCKET: ${{ secrets.INFRA_S3_BUCKET }}
 
 jobs:
   deploy:
@@ -59,7 +59,7 @@ jobs:
       - name: Trigger deployment
         run: |
           aws deploy create-deployment \
-            --application-name image-app \
+            --application-name image-app-codedeploy \
             --deployment-group-name image-app-deploy-group \
             --s3-location bucket=${{ env.INFRA_S3_BUCKET }},bundleType=json,key=deployments/appspec.json \
-            --file-exists-behavior OVERWRITE
+            --deployment-config-name CodeDeployDefault.ECSAllAtOnce
