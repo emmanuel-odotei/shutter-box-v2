@@ -3,7 +3,7 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: ""
+        TaskDefinition: "REPLACED_AT_DEPLOY"
         LoadBalancerInfo:
           ContainerName: "image-app"
           ContainerPort: 8082
