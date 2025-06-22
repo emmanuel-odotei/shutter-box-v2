@@ -1,6 +1,6 @@
 {
   "family": "image-app-task",
-  "executionRoleArn": "arn:aws:iam::<your-account-id>:role/<your-ecs-task-execution-role>",
+  "executionRoleArn": "arn:aws:iam::850995534424:role/ecsTaskExecutionRole",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
