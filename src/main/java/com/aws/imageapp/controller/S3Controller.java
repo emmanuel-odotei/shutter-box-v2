@@ -11,8 +11,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Controller
 @RequiredArgsConstructor
@@ -33,20 +34,34 @@ public class S3Controller {
                        @RequestParam(defaultValue = "10") int size,
                        @RequestParam(required = false) String search,
                        Model model) {
+        
         List<ImageData> filtered = s3Service.listImageUrls(page, size, search);
+        int totalPages = s3Service.getTotalPages(size, search);
+        
+        // Generate numbered page list
+        List<Integer> pageNumbers = IntStream.rangeClosed(1, totalPages)
+                .boxed()
+                .collect( Collectors.toList());
+        
+        // Add attributes
         model.addAttribute("images", filtered);
+        model.addAttribute("size", size);
         model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", s3Service.getTotalPages(size, search));
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("pageNumbers", pageNumbers);
         model.addAttribute("search", search);
+        
         return "index";
     }
     
     @PostMapping("/upload")
-    public String upload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+    public String upload(@RequestParam("files") MultipartFile[] files, RedirectAttributes redirectAttributes) {
         try {
-            s3Service.upload(file);
-            redirectAttributes.addFlashAttribute("message", "Upload successful!");
-        } catch ( IOException e) {
+            for (MultipartFile file : files) {
+                s3Service.upload(file);  // Reuse existing upload method
+            }
+            redirectAttributes.addFlashAttribute("message", "Files uploaded successfully!");
+        } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Upload failed: " + e.getMessage());
         }
         return "redirect:/";

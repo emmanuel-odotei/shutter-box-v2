@@ -22,7 +22,7 @@ public class S3Service {
     private String bucketName;
     
     @Value( "${aws.region}" )
-    private String regionName;
+    private String region;
     
     /**
      * Uploads a file to the specified S3 bucket with public read access.
@@ -78,7 +78,7 @@ public class S3Service {
                 }
                 
                 String key = obj.key();
-                String url = String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, regionName, key);
+                String url = String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, key);
                 String fileName = key.contains("/") ? key.substring(key.lastIndexOf("/") + 1) : key;
                 
                 result.add(new ImageData(url, fileName ));
