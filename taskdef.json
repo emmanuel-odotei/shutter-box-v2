@@ -1,7 +1,7 @@
 {
   "family": "image-app-task",
-  "executionRoleArn": "arn:aws:iam::850995534424:role/ecsTaskExecutionRole",
-  "taskRoleArn": "arn:aws:iam::850995534424:role/ecsTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::850995534424:role/image-app-root-stack-ECSAppStack--TaskExecutionRole-nKrFq7CMWBFA",
+  "taskRoleArn": "arn:aws:iam::850995534424:role/image-app-root-stack-ECSAppStack--TaskExecutionRole-nKrFq7CMWBFA",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
