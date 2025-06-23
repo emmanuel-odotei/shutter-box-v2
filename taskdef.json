@@ -15,7 +15,15 @@
           "hostPort": 8082
         }
       ],
-      "essential": true
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/image-app",
+          "awslogs-region": "eu-west-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
     }
   ]
 }
