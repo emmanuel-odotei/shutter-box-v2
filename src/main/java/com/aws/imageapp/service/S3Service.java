@@ -50,9 +50,57 @@ public class S3Service {
      * @return a list of ImageData objects containing the image URL and file name
      */
     public List<ImageData> listImageUrls(int page, int size, String search) {
-        List<ImageData> result = new ArrayList<>();
+        List<S3Object> allFilteredResults = new ArrayList<>();
         String continuationToken = null;
-        int skip = Math.max((page - 1) * size, 0);
+        
+        // Fetch all matching results first
+        do {
+            ListObjectsV2Request.Builder reqBuilder = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .maxKeys(1000);
+            
+            if (continuationToken != null) {
+                reqBuilder.continuationToken(continuationToken);
+            }
+            
+            ListObjectsV2Response response = s3Client.listObjectsV2(reqBuilder.build());
+            
+            List<S3Object> matchingObjects = (search == null || search.isBlank())
+                    ? response.contents()
+                    : response.contents().stream()
+                    .filter(obj -> obj.key().toLowerCase().contains(search.toLowerCase()))
+                    .toList();
+            
+            allFilteredResults.addAll(matchingObjects);
+            
+            continuationToken = response.nextContinuationToken();
+        } while (continuationToken != null);
+        
+        // Now paginate the results
+        int fromIndex = Math.min((page - 1) * size, allFilteredResults.size());
+        int toIndex = Math.min(fromIndex + size, allFilteredResults.size());
+        
+        return allFilteredResults.subList(fromIndex, toIndex).stream()
+                .map(obj -> {
+                    String key = obj.key();
+                    String url = String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, key);
+                    String fileName = key.contains("/") ? key.substring(key.lastIndexOf("/") + 1) : key;
+                    return new ImageData(url, fileName);
+                })
+                .toList();
+    }
+    
+    /**
+     * Calculates the total number of pages required to display all the images in the S3 bucket,
+     * filtered by the search term if provided, and limited to the specified page size.
+     *
+     * @param size   the number of images per page
+     * @param search the search term to filter images by (case-insensitive)
+     * @return the total number of pages required to display all the filtered images
+     */
+    public int getTotalPages(int size, String search) {
+        int count = 0;
+        String continuationToken = null;
         
         do {
             ListObjectsV2Request.Builder reqBuilder = ListObjectsV2Request.builder()
@@ -64,68 +112,18 @@ public class S3Service {
             }
             
             ListObjectsV2Response response = s3Client.listObjectsV2(reqBuilder.build());
-            List<S3Object> objects = response.contents();
             
-            List<S3Object> filtered = (search == null || search.isBlank())
-                    ? objects
-                    : objects.stream()
+            List<S3Object> matching = (search == null || search.isBlank())
+                    ? response.contents()
+                    : response.contents().stream()
                     .filter(obj -> obj.key().toLowerCase().contains(search.toLowerCase()))
                     .toList();
             
-            for (S3Object obj : filtered) {
-                if (skip-- > 0 || result.size() >= size) {
-                    continue;
-                }
-                
-                String key = obj.key();
-                String url = String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, key);
-                String fileName = key.contains("/") ? key.substring(key.lastIndexOf("/") + 1) : key;
-                
-                result.add(new ImageData(url, fileName ));
-            }
-            
+            count += matching.size();
             continuationToken = response.nextContinuationToken();
-            
-        } while (result.size() < size && continuationToken != null);
+        } while (continuationToken != null);
         
-        return result;
-    }
-    
-    /**
-     * Calculates the total number of pages required to display all the images in the S3 bucket,
-     * filtered by the search term if provided, and limited to the specified page size.
-     *
-     * @param size   the number of images per page
-     * @param search the search term to filter images by (case-insensitive)
-     * @return the total number of pages required to display all the filtered images
-     */
-    public int getTotalPages (int size, String search) {
-        int total = 0;
-        String continuationToken = null;
-        
-        do {
-            ListObjectsV2Request.Builder reqBuilder = ListObjectsV2Request.builder()
-                    .bucket( bucketName )
-                    .maxKeys( 1000 );
-            
-            if ( continuationToken != null ) {
-                reqBuilder.continuationToken( continuationToken );
-            }
-            
-            ListObjectsV2Response response = s3Client.listObjectsV2( reqBuilder.build() );
-            
-            List<S3Object> filtered = ( search == null || search.isBlank() )
-                    ? response.contents()
-                    : response.contents().stream()
-                    .filter( obj -> obj.key().toLowerCase().contains( search.toLowerCase() ) )
-                    .toList();
-            
-            total += filtered.size();
-            continuationToken = response.nextContinuationToken();
-            
-        } while ( continuationToken != null );
-        
-        return (int) Math.ceil( (double) total / size );
+        return (int) Math.ceil((double) count / size);
     }
     
     public void delete (String key) {

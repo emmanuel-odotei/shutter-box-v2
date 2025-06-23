@@ -223,7 +223,7 @@ background-size: cover; background-position: center; background-repeat: no-repea
         <form method="post" enctype="multipart/form-data" action="/upload" id="uploadForm">
             <div class="drop-zone" id="dropZone">
                 <p>Drag & Drop or Click to Select Image</p>
-                <input type="file" name="files" id="fileInput" multiple required style="display: none;" />
+                <input type="file" name="files" id="fileInput" multiple required style="display: none;"/>
             </div>
             <p class="upload-limit">Max file size: 20MB</p>
             <div class="progress-container">
@@ -234,10 +234,15 @@ background-size: cover; background-position: center; background-repeat: no-repea
     </div>
 
     <div class="search-bar">
-        <form method="get" th:action="@{/}">
+        <form method="get" th:action="@{/}" class="d-flex justify-content-center gap-2">
             <label>
-                <input type="text" name="q" placeholder="Search by image name" class="search-input"/>
+                <input type="text" name="search" th:value="${search}" placeholder="Search by image name"
+                       class="search-input"/>
             </label>
+
+            <button type="submit" class="btn btn-light">Search</button>
+
+            <a th:href="@{/?page=1&size=10}" class="btn btn-outline-light">Clear</a>
         </form>
     </div>
 
