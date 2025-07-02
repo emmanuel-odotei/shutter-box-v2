@@ -1,4 +1,4 @@
-name: Deploy to ECS using CodeDeploy
+name: Build and Push Java App (With RDS) to Private ECR
 
 on:
   push:
@@ -6,7 +6,6 @@ on:
 
 env:
   AWS_REGION: eu-west-1
-  INFRA_S3_BUCKET: ${{ secrets.INFRA_S3_BUCKET }}
 
 jobs:
   deploy:
@@ -37,29 +36,5 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t ${{ secrets.ECR_URI }}:${{ secrets.IMAGE_TAG }} .
-          docker push ${{ secrets.ECR_URI }}:${{ secrets.IMAGE_TAG }}
-
-      - name: Replace image URI in imagedefinitions.json
-        run: |
-          echo '[{"name":"image-app","imageUri":"${{ secrets.ECR_URI }}:${{ secrets.IMAGE_TAG }}"}]' > imagedefinitions.json
-
-      - name: Register new ECS task definition
-        run: |
-          sed "s|<IMAGE_URI>|${{ secrets.ECR_URI }}:${{ secrets.IMAGE_TAG }}|g" taskdef.json > taskdef-rendered.json
-          aws ecs register-task-definition --cli-input-json file://taskdef-rendered.json > taskdef-out.json
-          TASK_DEF_ARN=$(jq -r '.taskDefinition.taskDefinitionArn' taskdef-out.json)
-          sed "s|<TASK_DEFINITION_ARN>|$TASK_DEF_ARN|g" appspec.json > appspec-rendered.json
-
-      - name: Upload artifacts to S3
-        run: |
-          aws s3 cp appspec-rendered.json s3://${{ env.INFRA_S3_BUCKET }}/deployments/appspec.json
-          aws s3 cp imagedefinitions.json s3://${{ env.INFRA_S3_BUCKET }}/deployments/imagedefinitions.json
-
-      - name: Trigger deployment
-        run: |
-          aws deploy create-deployment \
-            --application-name image-app \
-            --deployment-group-name image-app-deploy-group \
-            --s3-location bucket=${{ env.INFRA_S3_BUCKET }},bundleType=json,key=deployments/appspec.json \
-            --deployment-config-name CodeDeployDefault.ECSAllAtOnce
+          docker build -t ${{ secrets.ECR_URI }}:latest .
+          docker push ${{ secrets.ECR_URI }}:latest

@@ -1,12 +1,12 @@
 spring:
   application:
-    name: image-app
+    name: shutter-box-v2
   servlet:
     multipart:
       max-file-size: 20MB
       max-request-size: 50MB
 server:
-  port: 8082
+  port: 8081
 management:
   endpoints:
     web:
@@ -18,4 +18,4 @@ management:
 aws:
   region: eu-west-1  # fallback to eu-west-1 if not set
   s3:
-    bucket: shutterbox-image-app-s3-bucket
+    bucket: shutter-box-v2-images
