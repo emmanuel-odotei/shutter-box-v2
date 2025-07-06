@@ -18,8 +18,9 @@
         }
 
         .container {
-            position: relative;
-            z-index: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 1rem;
         }
 
         h2 {
@@ -28,23 +29,10 @@
             font-weight: bold;
         }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 1rem;
-        }
-
         .upload-section {
             text-align: center;
             margin-top: 1rem;
             margin-bottom: 2rem;
-        }
-
-        .upload-limit {
-            font-size: 0.85rem;
-            color: #ccc;
-            margin-top: 0.5rem;
-            font-style: italic;
         }
 
         .drop-zone {
@@ -61,6 +49,34 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
+        .preview-area {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .preview-area img {
+            width: 180px;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 2px;
+            border: 6px solid #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .preview-area textarea {
+            margin-top: 6px;
+            border-radius: 4px;
+            resize: none;
+            height: 24px;
+            font-size: 11px;
+            padding: 2px 6px;
+            line-height: 1.2;
+            width: 180px;
+        }
+
         .gallery {
             display: flex;
             flex-wrap: wrap;
@@ -70,30 +86,42 @@
         }
 
         .thumbnail {
+            position: relative;
             width: 180px;
-            height: auto; /* Let it expand based on content */
             border: 7px solid white;
             border-radius: 1px;
             overflow: hidden;
-            position: relative;
-            transition: transform 0.2s;
-            cursor: pointer;
             background-color: #222;
             display: flex;
-            flex-direction: column; /* Stack image and name vertically */
+            flex-direction: column;
             align-items: center;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .thumbnail:hover {
-            transform: scale(1.05);
-            z-index: 2;
         }
 
         .thumbnail img {
             width: 100%;
             height: 180px;
             object-fit: cover;
+        }
+
+        .thumbnail .image-name {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #000;
+            text-align: center;
+            padding: 4px 6px;
+            background-color: #fff;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .thumbnail .image-description {
+            font-size: 11px;
+            color: #ccc;
+            padding: 0 4px 4px;
+            text-align: center;
         }
 
         .delete-btn {
@@ -105,21 +133,13 @@
             color: white;
             padding: 4px 8px;
             border-radius: 4px;
-            cursor: pointer;
             font-size: 12px;
             z-index: 10;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-        }
-
-        .pagination .page-item.active .page-link {
-            background-color: #6c63ff;
-            border-color: #6c63ff;
-            color: white;
         }
 
         .search-bar {
             text-align: center;
-            margin: -0.5rem 1rem 1rem;
+            margin: 1rem 0;
         }
 
         .search-input {
@@ -133,34 +153,40 @@
             font-size: 14px;
         }
 
-        .image-name {
-            margin-top: 6px;
-            font-size: 12px;
-            color: #000;
-            text-align: center;
-            padding: 4px 6px;
-            background-color: #fff;
-            width: 100%;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            border-top: 1px solid #ddd;
-            border-bottom-left-radius: 1px;
-            border-bottom-right-radius: 1px;
-            cursor: default; /* optional: shows it's not clickable */
+        .loader-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 180px;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 4px;
+            z-index: 10;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
         }
 
-        .progress-container {
-            display: none;
-            width: 100%;
-            margin-top: 10px;
+        .loader-circle {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #ccc;
+            border-top: 5px solid #29b6f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: absolute;
         }
 
-        .progress-bar {
-            height: 8px;
-            background-color: #29b6f6;
-            border-radius: 5px;
-            transition: width 0.4s;
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         #toast-container {
@@ -168,9 +194,6 @@
             top: 1rem;
             right: 1rem;
             z-index: 1050;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
         }
 
         .toast {
@@ -213,124 +236,83 @@
     </style>
 </head>
 
-<body style="background-image: linear-gradient(135deg, rgba(173, 83, 137, 0.85), rgba(60, 16, 83, 0.95));
-background-size: cover; background-position: center; background-repeat: no-repeat;">
-
+<body style="background: linear-gradient(135deg, rgba(173,83,137,0.85), rgba(60,16,83,0.95));">
 <div class="container">
-    <h2>📸 ShutterBox - V1</h2>
-
+    <h2>📸 ShutterBox - V2</h2>
     <div class="upload-section">
         <form method="post" enctype="multipart/form-data" action="/upload" id="uploadForm">
             <div class="drop-zone" id="dropZone">
                 <p>Drag & Drop or Click to Select Image</p>
-                <input type="file" name="files" id="fileInput" multiple required style="display: none;"/>
+                <input type="file" name="file" id="fileInput" accept="image/*" required style="display: none;"/>
             </div>
-            <p class="upload-limit">Max file size: 20MB</p>
+            <div id="preview" class="gallery justify-content-center mt-3" style="display: none;"></div>
+            <div class="preview-area" id="previewArea" style="display: none;"></div>
+
             <div class="progress-container">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
-            <button class="btn btn-light mt-2" type="submit">Upload</button>
+            <div class="d-flex justify-content-center">
+                <button class="btn btn-light mt-3" type="submit">Upload</button>
+            </div>
         </form>
     </div>
 
     <div class="search-bar">
         <form method="get" th:action="@{/}" class="d-flex justify-content-center gap-2">
             <label>
-                <input type="text" name="search" th:value="${search}" placeholder="Search by image name"
+                <input type="text" name="search" th:value="${search}" placeholder="Search by name or description"
                        class="search-input"/>
             </label>
-
             <button type="submit" class="btn btn-light">Search</button>
-
             <a th:href="@{/?page=1&size=10}" class="btn btn-outline-light">Clear</a>
         </form>
     </div>
 
     <div class="gallery">
         <div class="thumbnail" th:each="img : ${images}">
-            <img th:src="${img.url}" th:alt="${img.fileName}" data-bs-toggle="modal" data-bs-target="#imageModal"
-                 th:attr="data-img=${img.url}"/>
-
+            <img th:src="${img.url}" th:alt="${img.fileName}"/>
             <form th:action="@{/delete}" method="post">
-                <input type="hidden" name="key" th:value="${#strings.substringAfter(img.url, '.com/')}"/>
+                <input type="hidden" name="key" th:value="${img.key}"/>
                 <button type="submit" class="delete-btn">X</button>
             </form>
-
-            <div class="image-name" th:text="${img.fileName}" th:attr="title=${img.fileName}"></div>
+            <div class="image-name" th:text="${img.fileName}"></div>
+            <div class="image-description" th:if="${img.description}" th:text="${img.description}"></div>
         </div>
     </div>
 
     <div class="pagination d-flex justify-content-center mt-4">
         <ul class="pagination">
-
-            <!-- Previous Button -->
             <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                <a class="page-link"
-                   th:href="@{/
-           (page=${currentPage != null ? currentPage - 1 : 1},
-            size=${size},
-            search=${search})}">
-                    &laquo;
-                </a>
+                <a class="page-link" th:href="@{/(page=${currentPage - 1}, size=${size}, search=${search})}">&laquo;</a>
             </li>
-
-            <!-- Page Numbers -->
-            <li class="page-item"
-                th:each="i : ${#numbers.sequence(1, totalPages)}"
+            <li class="page-item" th:each="i : ${#numbers.sequence(1, totalPages)}"
                 th:classappend="${i == currentPage} ? 'active'">
-                <a class="page-link"
-                   th:href="@{/
-                   (page=${i},
-                    size=${size},
-                    search=${search})}"
-                   th:text="${i}">1</a>
+                <a class="page-link" th:href="@{/(page=${i}, size=${size}, search=${search})}" th:text="${i}">1</a>
             </li>
-
-            <!-- Next Button -->
             <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                <a class="page-link"
-                   th:href="@{/
-                   (page=${currentPage + 1},
-                    size=${size},
-                    search=${search})}">
-                    &raquo;
-                </a>
+                <a class="page-link" th:href="@{/(page=${currentPage + 1}, size=${size}, search=${search})}">&raquo;</a>
             </li>
         </ul>
     </div>
-</div>
 
-<!-- Modal for full image view -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content bg-dark">
-            <div class="modal-header border-0">
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img id="modalImage" src="" style="max-width:100%; max-height:80vh;" alt=""/>
-            </div>
-        </div>
+    <div id="toast-container">
+        <div th:if="${message}" class="toast success-toast" th:text="${message}"></div>
+        <div th:if="${error}" class="toast error-toast" th:text="${error}"></div>
     </div>
-</div>
-
-<!-- Toasts -->
-<div id="toast-container">
-    <div th:if="${message}" class="toast success-toast" th:text="${message}"></div>
-    <div th:if="${error}" class="toast error-toast" th:text="${error}"></div>
 </div>
 
 <!-- Scripts -->
 <script>
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
-    const form = document.getElementById('uploadForm');
+    const preview = document.getElementById('preview');
     const progressBar = document.getElementById('progressBar');
     const progressContainer = document.querySelector('.progress-container');
+    const uploadForm = document.getElementById('uploadForm');
 
     dropZone.addEventListener('click', () => fileInput.click());
 
-    dropZone.addEventListener('dragover', (e) => {
+    dropZone.addEventListener('dragover', e => {
         e.preventDefault();
         dropZone.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
     });
@@ -339,69 +321,103 @@ background-size: cover; background-position: center; background-repeat: no-repea
         dropZone.style.backgroundColor = 'transparent';
     });
 
-    dropZone.addEventListener('drop', (e) => {
+    dropZone.addEventListener('drop', e => {
         e.preventDefault();
         fileInput.files = e.dataTransfer.files;
         previewImage();
     });
 
-    function previewImages() {
-        const gallery = document.querySelector('.gallery');
-        gallery.innerHTML = ''; // Clear current previews
-        Array.from(fileInput.files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const result = e.target?.result;
-                if (typeof result === 'string') {
-                    const preview = document.createElement('div');
-                    preview.className = 'thumbnail';
+    fileInput.addEventListener('change', previewImage);
 
-                    const img = document.createElement('img');
-                    img.src = result;
+    function previewImage() {
+        const file = fileInput.files[0];
 
-                    preview.appendChild(img);
-                    gallery.prepend(preview);
-                }
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    fileInput.addEventListener('change', previewImages);
-
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const files = fileInput.files;
-        if (!files.length) return;
-
-        const xhr = new XMLHttpRequest();
-        const formData = new FormData();
-        for (const file of files) {
-            formData.append("files", file);
+        if (!file) {
+            preview.innerHTML = '';
+            preview.style.display = 'none';
+            return;
         }
 
-        xhr.open("POST", form.action, true);
-        xhr.upload.onprogress = function (e) {
-            if (e.lengthComputable) {
-                const percent = (e.loaded / e.total) * 100;
-                progressContainer.style.display = "block";
-                progressBar.style.width = percent + "%";
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const result = e.target.result;
+
+            preview.innerHTML = '';
+            preview.style.display = 'flex';
+
+            const container = document.createElement('div');
+            container.className = 'thumbnail';
+            container.style.position = 'relative';
+
+            const img = document.createElement('img');
+            img.src = typeof result === 'string' ? result : '';
+            container.appendChild(img);
+
+            // Loader overlay (initially hidden)
+            const loaderOverlay = document.createElement('div');
+            loaderOverlay.className = 'loader-overlay';
+            loaderOverlay.id = 'loaderOverlay';
+            loaderOverlay.style.display = 'none';
+
+            const circle = document.createElement('div');
+            circle.className = 'loader-circle';
+            loaderOverlay.appendChild(circle);
+
+            container.appendChild(loaderOverlay);
+
+            // Description input
+            const textarea = document.createElement('textarea');
+            textarea.name = 'description';
+            textarea.className = 'form-control mt-1';
+            textarea.placeholder = 'Enter description (optional)';
+            textarea.style.width = '90%';
+            textarea.style.marginTop = '6px';
+            textarea.style.borderRadius = '4px';
+            textarea.style.resize = 'none';
+            textarea.style.height = '24px';
+            textarea.style.fontSize = '11px';
+            textarea.style.padding = '2px 6px';
+            textarea.style.lineHeight = '1.2';
+
+            container.appendChild(textarea);
+            preview.appendChild(container);
+        };
+
+        reader.readAsDataURL(file);
+    }
+
+    uploadForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const formData = new FormData(uploadForm);
+        formData.set('file', file);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', uploadForm.action, true);
+
+        const loaderOverlay = document.getElementById('loaderOverlay');
+        loaderOverlay.style.display = 'flex';
+
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                window.location.reload();
+            } else {
+                alert('Upload failed!');
+                loaderOverlay.style.display = 'none';
             }
         };
-        xhr.onload = function () {
-            window.location.reload();
+
+        xhr.onerror = function () {
+            alert('Upload error!');
+            loaderOverlay.style.display = 'none';
         };
+
         xhr.send(formData);
     });
-
-    document.querySelectorAll('.thumbnail img').forEach(img => {
-        img.addEventListener('click', function () {
-            const modalImage = document.getElementById('modalImage');
-            modalImage.src = this.getAttribute('data-img');
-        });
-    });
 </script>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

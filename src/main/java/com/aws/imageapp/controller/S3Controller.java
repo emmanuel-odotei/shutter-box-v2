@@ -1,8 +1,9 @@
 package com.aws.imageapp.controller;
 
-import com.aws.imageapp.dto.ImageData;
+import com.aws.imageapp.entity.dto.ImageData;
 import com.aws.imageapp.service.S3Service;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ import java.util.stream.IntStream;
 
 @Controller
 @RequiredArgsConstructor
+@Slf4j
 public class S3Controller {
     private final S3Service s3Service;
     
@@ -55,14 +57,22 @@ public class S3Controller {
     }
     
     @PostMapping("/upload")
-    public String upload(@RequestParam("files") MultipartFile[] files, RedirectAttributes redirectAttributes) {
+    public String upload(@RequestParam("file") MultipartFile file,
+                         @RequestParam("description") String description,
+                         RedirectAttributes redirectAttributes) {
         try {
-            for (MultipartFile file : files) {
-                s3Service.upload(file);  // Reuse existing upload method
+            // Perform upload logic and validations
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                throw new IllegalArgumentException("Only image files are allowed.");
             }
-            redirectAttributes.addFlashAttribute("message", "Files uploaded successfully!");
+            
+            s3Service.upload(file, description);
+            redirectAttributes.addFlashAttribute("message", "File uploaded successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Upload failed: " + e.getMessage());
+            log.error("Upload failed", e);
+            return "redirect:/";
         }
         return "redirect:/";
     }
