@@ -73,7 +73,6 @@ public class S3Controller {
             return ResponseEntity.badRequest().body("Upload failed: " + e.getMessage());
         }
     }
-    
     /**
      * Deletes an image from S3 and redirects back to the homepage.
      *
