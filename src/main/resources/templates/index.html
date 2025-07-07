@@ -35,6 +35,24 @@
             margin-bottom: 2rem;
         }
 
+        .alert {
+            padding: 12px 20px;
+            font-size: 14px;
+            border-radius: 6px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
         .drop-zone {
             border: 2px dashed #ffffffaa;
             padding: 30px;
@@ -188,57 +206,15 @@
                 transform: rotate(360deg);
             }
         }
-
-        #toast-container {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 1050;
-        }
-
-        .toast {
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            color: white;
-            min-width: 220px;
-            max-width: 300px;
-            animation: slide-in 0.5s ease, fade-out 1s ease 4s forwards;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .success-toast {
-            background: linear-gradient(135deg, #22c1c3, #3f87a6);
-        }
-
-        .error-toast {
-            background: linear-gradient(135deg, #f85032, #e73827);
-        }
-
-        @keyframes slide-in {
-            from {
-                opacity: 0;
-                transform: translateX(100%);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes fade-out {
-            to {
-                opacity: 0;
-                transform: translateX(100%);
-                display: none;
-            }
-        }
     </style>
 </head>
 
 <body style="background: linear-gradient(135deg, rgba(173,83,137,0.85), rgba(60,16,83,0.95));">
 <div class="container">
     <h2>📸 ShutterBox - V2</h2>
+
+    <div id="upload-status" style="display: none;"></div>
+
     <div class="upload-section">
         <form method="post" enctype="multipart/form-data" action="/upload" id="uploadForm">
             <div class="drop-zone" id="dropZone">
@@ -270,7 +246,7 @@
 
     <div class="gallery">
         <div class="thumbnail" th:each="img : ${images}">
-            <img th:src="${img.url}" th:alt="${img.fileName}"/>
+            <img th:src="${img.url}" th:alt="${img.fileName}" loading="lazy"/>
             <form th:action="@{/delete}" method="post">
                 <input type="hidden" name="key" th:value="${img.key}"/>
                 <button type="submit" class="delete-btn">X</button>
@@ -294,11 +270,6 @@
             </li>
         </ul>
     </div>
-
-    <div id="toast-container">
-        <div th:if="${message}" class="toast success-toast" th:text="${message}"></div>
-        <div th:if="${error}" class="toast error-toast" th:text="${error}"></div>
-    </div>
 </div>
 
 <!-- Scripts -->
@@ -306,8 +277,6 @@
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const preview = document.getElementById('preview');
-    const progressBar = document.getElementById('progressBar');
-    const progressContainer = document.querySelector('.progress-container');
     const uploadForm = document.getElementById('uploadForm');
 
     dropZone.addEventListener('click', () => fileInput.click());
@@ -386,6 +355,17 @@
         reader.readAsDataURL(file);
     }
 
+    function showStatusBanner(message, isSuccess) {
+        const banner = document.getElementById('upload-status');
+        banner.textContent = message;
+        banner.className = 'alert ' + (isSuccess ? 'alert-success' : 'alert-error');
+        banner.style.display = 'block';
+
+        setTimeout(() => {
+            banner.style.display = 'none';
+        }, 7000);
+    }
+
     uploadForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
@@ -399,20 +379,22 @@
         xhr.open('POST', uploadForm.action, true);
 
         const loaderOverlay = document.getElementById('loaderOverlay');
-        loaderOverlay.style.display = 'flex';
+        if (loaderOverlay) loaderOverlay.style.display = 'flex';
 
         xhr.onload = function () {
+            if (loaderOverlay) loaderOverlay.style.display = 'none';
+
             if (xhr.status === 200) {
-                window.location.reload();
+                showStatusBanner(xhr.responseText, true);
+                setTimeout(() => window.location.reload(), 5000);
             } else {
-                alert('Upload failed!');
-                loaderOverlay.style.display = 'none';
+                showStatusBanner(xhr.responseText, false);
             }
         };
 
         xhr.onerror = function () {
-            alert('Upload error!');
-            loaderOverlay.style.display = 'none';
+            if (loaderOverlay) loaderOverlay.style.display = 'none';
+            showStatusBanner("Upload failed due to network error.", false);
         };
 
         xhr.send(formData);

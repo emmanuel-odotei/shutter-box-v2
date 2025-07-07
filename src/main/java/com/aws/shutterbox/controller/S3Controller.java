@@ -1,9 +1,10 @@
-package com.aws.imageapp.controller;
+package com.aws.shutterbox.controller;
 
-import com.aws.imageapp.entity.dto.ImageData;
-import com.aws.imageapp.service.S3Service;
+import com.aws.shutterbox.entity.dto.ImageData;
+import com.aws.shutterbox.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,26 +58,29 @@ public class S3Controller {
     }
     
     @PostMapping("/upload")
-    public String upload(@RequestParam("file") MultipartFile file,
-                         @RequestParam("description") String description,
-                         RedirectAttributes redirectAttributes) {
+    public ResponseEntity<String> upload(@RequestParam("file") MultipartFile file,
+                                    @RequestParam("description") String description) {
         try {
-            // Perform upload logic and validations
             String contentType = file.getContentType();
             if (contentType == null || !contentType.startsWith("image/")) {
                 throw new IllegalArgumentException("Only image files are allowed.");
             }
             
             s3Service.upload(file, description);
-            redirectAttributes.addFlashAttribute("message", "File uploaded successfully!");
+            return ResponseEntity.ok("File uploaded successfully!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Upload failed: " + e.getMessage());
             log.error("Upload failed", e);
-            return "redirect:/";
+            return ResponseEntity.badRequest().body("Upload failed: " + e.getMessage());
         }
-        return "redirect:/";
     }
     
+    /**
+     * Deletes an image from S3 and redirects back to the homepage.
+     *
+     * @param key the S3 key of the image to delete
+     * @param redirectAttributes the redirect attributes to add success/error messages to
+     * @return "redirect:/" to redirect back to the homepage
+     */
     @PostMapping("/delete")
     public String deleteImage(@RequestParam("key") String key, RedirectAttributes redirectAttributes) {
         try {

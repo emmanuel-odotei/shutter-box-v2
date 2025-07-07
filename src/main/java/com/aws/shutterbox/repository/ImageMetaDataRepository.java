@@ -1,6 +1,6 @@
-package com.aws.imageapp.repository;
+package com.aws.shutterbox.repository;
 
-import com.aws.imageapp.entity.ImageMetaData;
+import com.aws.shutterbox.entity.ImageMetaData;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

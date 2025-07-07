@@ -1,4 +1,4 @@
-package com.aws.imageapp.entity.dto;
+package com.aws.shutterbox.entity.dto;
 
 public record ImageData(
         String url,

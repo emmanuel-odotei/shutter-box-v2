@@ -1,13 +1,12 @@
-package com.aws.imageapp;
+package com.aws.shutterbox;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ImageApplication {
+public class ShutterBox {
 
 	public static void main(String[] args) {
-		SpringApplication.run( ImageApplication.class, args);
+		SpringApplication.run( ShutterBox.class, args);
 	}
-
 }

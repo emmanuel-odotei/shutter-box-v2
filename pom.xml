@@ -12,9 +12,9 @@
 	</parent>
 
 	<groupId>com.aws</groupId>
-	<artifactId>imageapp</artifactId>
+	<artifactId>shutterbox</artifactId>
 	<version>1.0.0</version>
-	<name>image-app</name>
+	<name>shutterbox</name>
 	<description>Image app for uploading images to S3 Bucket and hosted on AWS</description>
 
 	<properties>
@@ -80,6 +80,7 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
+			<version>42.6.0</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>

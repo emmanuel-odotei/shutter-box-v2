@@ -1,4 +1,4 @@
-package com.aws.imageapp.entity;
+package com.aws.shutterbox.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
