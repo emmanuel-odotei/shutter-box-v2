@@ -259,14 +259,14 @@
     <div class="pagination d-flex justify-content-center mt-4">
         <ul class="pagination">
             <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                <a class="page-link" th:href="@{/(page=${currentPage - 1}, size=${size}, search=${search})}">&laquo;</a>
+                <a class="page-link" th:href="@{/(page=${currentPage != null ? currentPage - 1 : 1}, size=${size}, search=${search})}">&laquo;</a>
             </li>
             <li class="page-item" th:each="i : ${#numbers.sequence(1, totalPages)}"
                 th:classappend="${i == currentPage} ? 'active'">
                 <a class="page-link" th:href="@{/(page=${i}, size=${size}, search=${search})}" th:text="${i}">1</a>
             </li>
             <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                <a class="page-link" th:href="@{/(page=${currentPage + 1}, size=${size}, search=${search})}">&raquo;</a>
+                <a class="page-link" th:href="@{/(page=${currentPage != null ? currentPage + 1 : 2}, size=${size}, search=${search})}">&raquo;</a>
             </li>
         </ul>
     </div>
