@@ -42,7 +42,7 @@ public class S3Controller {
         int totalPages = s3Service.getTotalPages(size, search);
         
         // Generate numbered page list
-        List<Integer> pageNumbers = IntStream.rangeClosed(1, totalPages)
+        List<Integer> pageNumbers = IntStream.rangeClosed(1, Math.max(1, totalPages))
                 .boxed()
                 .collect( Collectors.toList());
         
