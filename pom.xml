@@ -15,7 +15,7 @@
 	<artifactId>shutterbox</artifactId>
 	<version>1.0.0</version>
 	<name>shutterbox</name>
-	<description>Image app for uploading images to S3 Bucket and hosted on AWS</description>
+	<description>Image app for uploading images to S3 Bucket, Saving metadata on RDS and hosted on AWS</description>
 
 	<properties>
 		<java.version>17</java.version>
