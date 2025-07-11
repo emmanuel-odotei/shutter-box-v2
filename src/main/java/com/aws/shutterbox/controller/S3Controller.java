@@ -39,10 +39,10 @@ public class S3Controller {
                        Model model) {
         
         List<ImageData> filtered = s3Service.listImageUrls(page, size, search);
-        int totalPages = s3Service.getTotalPages(size, search);
+        int totalPages = Math.max(1, s3Service.getTotalPages(size, search));
         
         // Generate numbered page list
-        List<Integer> pageNumbers = IntStream.rangeClosed(1, Math.max(1, totalPages))
+        List<Integer> pageNumbers = IntStream.rangeClosed(1, totalPages)
                 .boxed()
                 .collect( Collectors.toList());
         
@@ -70,7 +70,7 @@ public class S3Controller {
             return ResponseEntity.ok("File uploaded successfully!");
         } catch (Exception e) {
             log.error("Upload failed", e);
-            return ResponseEntity.badRequest().body("Upload failed: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Upload failed");
         }
     }
     

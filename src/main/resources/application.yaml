@@ -14,7 +14,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
-
+    open-in-view: false
 server:
   port: 8081
 
@@ -31,3 +31,7 @@ aws:
   region: ${AWS_REGION:eu-central-1}  # use env var or fallback to eu-west-1
   s3:
     bucket: ${BUCKET_NAME:shutter-box-v2-images}  # use env var or fallback
+
+logging:
+  level:
+    org: WARN

@@ -246,7 +246,9 @@
 
     <div class="gallery">
         <div class="thumbnail" th:each="img : ${images}">
-            <img th:src="${img.url}" th:alt="${img.fileName}" loading="lazy"/>
+            <img th:src="${img.url}" th:alt="${img.fileName}" loading="lazy"
+                 class="clickable-image" data-bs-toggle="modal" data-bs-target="#imageModal"
+                 th:attr="data-image-url=${img.url}"/>
             <form th:action="@{/delete}" method="post">
                 <input type="hidden" name="key" th:value="${img.key}"/>
                 <button type="submit" class="delete-btn">X</button>
@@ -258,15 +260,23 @@
 
     <div class="pagination d-flex justify-content-center mt-4">
         <ul class="pagination">
+            <!-- Previous button -->
             <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                <a class="page-link" th:href="@{/(page=${currentPage != null ? currentPage - 1 : 1}, size=${size}, search=${search})}">&laquo;</a>
+                <a class="page-link"
+                   th:href="@{/(page=${currentPage > 1 ? currentPage - 1 : 1}, size=${size}, search=${search})}">&laquo;</a>
             </li>
-            <li class="page-item" th:each="i : ${#numbers.sequence(1, totalPages)}"
+
+            <!-- Page numbers loop -->
+            <li class="page-item"
+                th:each="i : ${pageNumbers}"
                 th:classappend="${i == currentPage} ? 'active'">
                 <a class="page-link" th:href="@{/(page=${i}, size=${size}, search=${search})}" th:text="${i}">1</a>
             </li>
+
+            <!-- Next button -->
             <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                <a class="page-link" th:href="@{/(page=${currentPage != null ? currentPage + 1 : 2}, size=${size}, search=${search})}">&raquo;</a>
+                <a class="page-link"
+                   th:href="@{/(page=${currentPage < totalPages ? currentPage + 1 : totalPages}, size=${size}, search=${search})}">&raquo;</a>
             </li>
         </ul>
     </div>
@@ -386,7 +396,7 @@
 
             if (xhr.status === 200) {
                 showStatusBanner(xhr.responseText, true);
-                setTimeout(() => window.location.reload(), 5000);
+                setTimeout(() => window.location.reload(), 2000);
             } else {
                 showStatusBanner(xhr.responseText, false);
             }
@@ -401,5 +411,29 @@
     });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const modalImage = document.getElementById('modalImage');
+        const thumbnails = document.querySelectorAll('.clickable-image');
+
+        thumbnails.forEach(img => {
+            img.addEventListener('click', () => {
+                modalImage.src = img.getAttribute('data-image-url');
+            });
+        });
+    });
+</script>
+
+<!-- Image View Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content bg-dark">
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="Full View" class="img-fluid rounded" style="max-height: 80vh;"/>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
